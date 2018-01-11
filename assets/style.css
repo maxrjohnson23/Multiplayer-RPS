@@ -4,8 +4,8 @@ html {
 
 body {
     padding-bottom: 30px;
-    min-height: 100%;
     background: url("images/spiration-light.png");
+    height: 100%;
 }
 
 nav {
@@ -16,16 +16,37 @@ nav img {
     margin: 0 auto;
 }
 
+.container {
+    margin-top: 30px;
+    background-color: #fff;
+    height: 75%;
+    border: 2px solid #0A001A;
+    text-align: center;
+}
+
+.em {
+    height: 10em;
+    width: 10em;
+}
+
+
+
+vs-text {
+    text-align: center;
+}
+
+
 footer {
     background-color: #0A001A;
-    position: absolute;
+    position: fixed;
     bottom: 0;
-    right: 0;
-    left: 0;
+    width: 100%;
     text-align: center;
     height: 30px;
+    border-top: 3px solid #008F99;
 }
 
 footer small {
+    color: #008F99;
     font-size: 10px;
 }
