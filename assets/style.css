@@ -1,0 +1,31 @@
+html {
+    height: 100%;
+}
+
+body {
+    padding-bottom: 30px;
+    min-height: 100%;
+    background: url("images/spiration-light.png");
+}
+
+nav {
+    background-color: #0A001A;
+}
+
+nav img {
+    margin: 0 auto;
+}
+
+footer {
+    background-color: #0A001A;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    text-align: center;
+    height: 30px;
+}
+
+footer small {
+    font-size: 10px;
+}
