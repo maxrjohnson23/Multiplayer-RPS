@@ -10,3 +10,21 @@ var config = {
 firebase.initializeApp(config);
 
 database.firebase();
+
+// Game logic
+var game = {
+
+}
+
+// Object for handling firebase interactions
+var dataHandler = {
+
+}
+
+
+// Screen handler object for managing UI updates
+var screenHandler = {
+
+};
+
+
