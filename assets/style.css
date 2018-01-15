@@ -49,6 +49,16 @@ nav img {
     flex-basis: 400px;
 }
 
+#chat-window {
+    height: 180px;
+    overflow: auto;
+}
+
+.chat-message {
+    padding: 5px;
+    margin-bottom: 0;
+}
+
 footer {
     background-color: #0A001A;
     position: fixed;

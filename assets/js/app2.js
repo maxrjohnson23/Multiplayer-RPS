@@ -148,6 +148,34 @@ function calculateWinner(move1, move2) {
     }
 }
 
+$("#send-button").on("click", function() {
+    var message = $("#message").val();
+    addMessageToDB(userName, message);
+});
+
+
+function addMessageToDB(user, message) {
+    database.ref("/chat").push({user: user, message: message});
+}
+
+database.ref("/chat").on("child_added", function(snapshot) {
+    var message = snapshot.val();
+    appendMessage(message.user, message.message)
+});
+
+function appendMessage(id, message) {
+    var p = $("<p>");
+    p.text(`${id}: ${message}`);
+    p.addClass("chat-message");
+    if(id !== userName) {
+        p.css("text-align", "right");
+    }
+    var $chatWindow = $("#chat-window");
+    $chatWindow.append(p);
+    $chatWindow.prop("scrollTop", $chatWindow.prop("scrollHeight"));
+
+}
+
 
 window.onload = function () {
     $("#username-select").modal({backdrop: 'static', keyboard: false});
