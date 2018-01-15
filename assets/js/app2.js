@@ -41,11 +41,29 @@ database.ref("/players").on("value", function (snapshot) {
 // Updates to game
 database.ref("/game/moves").on("value", function (snapshot) {
     var moves = snapshot.val();
-    if (snapshot.numChildren() === 2) {
+    if(snapshot.numChildren() === 2) {
 
-        console.log(moves);
+        var playerMove = null;
+        var opponentMove = null;
+        Object.keys(moves)
+            .forEach(function eachKey(key) {
+                if (moves[key].userName === userName) {
+                    playerMove = moves[key].move;
+                } else {
+                    opponentMove = moves[key].move;
+
+                }
+            });
+
+        console.log("Player: " + playerMove);
+        console.log("Opponent: " + opponentMove);
+        var outcome = calculateWinner(playerMove, opponentMove);
+        console.log("Outcome: " + outcome);
     }
-});
+
+
+})
+;
 
 // Updates to game
 database.ref("/game").on("value", function (snapshot) {
@@ -68,13 +86,29 @@ function startGame(players) {
 $("#move-selections").find("button").on("click", function () {
     let selection = $(this).attr("data-move");
     let move = {
-        player: userName,
+        userName: userName,
         move: selection
     };
     database.ref("/game/moves").push(move);
     $("#move-selections").find("button").prop("disabled", true);
 
 });
+
+function calculateWinner(move1, move2) {
+    var choices = ["rock", "paper", "scissors"];
+    var moveNum1 = choices.indexOf(move1);
+    var moveNum2 = choices.indexOf(move2);
+
+    if (moveNum1 === moveNum2) {
+        return -1;
+    }
+    else if ((moveNum1 - moveNum2 + 3) % 3 === 1) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
 
 
 window.onload = function () {
