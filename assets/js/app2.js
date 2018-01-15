@@ -52,14 +52,26 @@ database.ref("/game/moves").on("value", function (snapshot) {
 
         console.log("Player: " + playerMove);
         console.log("Opponent: " + opponentMove);
+        var img = $('<img />', {
+            src: `assets/images/${opponentMove}.png`,
+            alt: opponentMove
+        });
+        // Update opponent image
+        $("#opponent-selection").html(img);
+        // Update opponent text
+        $("#opponent-text").text(opponentMove);
+
         let outcome = calculateWinner(playerMove, opponentMove);
-        $("#move-selections").find("button").prop("disabled", false);
         if (outcome > 0) {
-            console.log("Win!");
             userWins++;
+            // Update score in database
             database.ref("/game/" + userName + "/score").set(userWins);
         }
         database.ref("/game/moves/" + userName).remove();
+        setTimeout(function() {
+            $(".move-display").empty();
+            $("#move-selections").find("button").prop("disabled", false);
+        }, 2000);
         console.log("Unlock game");
 
 
@@ -89,9 +101,11 @@ function startGame(players) {
 $("#move-selections").find("button").on("click", function () {
     let selection = $(this).attr("data-move");
     console.log("Clicked: " + selection);
-    // let move = {
-    //     move: selection
-    // };
+    var img = $('<img />', {
+        src: `assets/images/${selection}.png`,
+        alt: selection
+    });
+    $("#player-selection").html(img);
     $("#move-selections").find("button").prop("disabled", true);
     database.ref("/game/moves/" + userName).set({move: selection});
 

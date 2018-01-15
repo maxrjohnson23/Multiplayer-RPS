@@ -29,6 +29,22 @@ nav img {
     height: 400px;
 }
 
+.move-display {
+    text-align: center;
+}
+
+.move-display img{
+    width: 50%;
+}
+
+.selection-text {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+}
+
+
 .chat-div {
     flex-basis: 400px;
 }
