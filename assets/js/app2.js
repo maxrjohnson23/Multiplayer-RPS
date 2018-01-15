@@ -33,9 +33,10 @@ database.ref("/players").on("value", function (snapshot) {
         });
         opponentName = players[opponentKey].userName;
         $("#opponent-title").text(opponentName);
-        startGame(players);
+        startGame();
 
     } else if (snapshot.numChildren() === 1) {
+        $("#opponent-title").text("Waiting...");
         console.log("Waiting for opponent");
     }
 });
@@ -91,7 +92,7 @@ database.ref("/game").on("value", function (snapshot) {
 });
 
 //
-function startGame(players) {
+function startGame() {
     console.log("Starting game");
     let game = {
         moves: null,
@@ -103,7 +104,7 @@ function startGame(players) {
 $("#move-selections").find("button").on("click", function () {
     let selection = $(this).attr("data-move");
     console.log("Clicked: " + selection);
-    var img = $('<img />', {
+    let img = $('<img />', {
         src: `assets/images/${selection}.png`,
         alt: selection
     });
@@ -114,9 +115,9 @@ $("#move-selections").find("button").on("click", function () {
 });
 
 function calculateWinner(move1, move2) {
-    var choices = ["rock", "paper", "scissors"];
+    let choices = ["rock", "paper", "scissors"];
     var moveNum1 = choices.indexOf(move1);
-    var moveNum2 = choices.indexOf(move2);
+    let moveNum2 = choices.indexOf(move2);
 
     if (moveNum1 === moveNum2) {
         return -1;
@@ -136,7 +137,7 @@ window.onload = function () {
         userName = $("#username-input").val();
         console.log("Setting username: " + userName);
         $("#player-title").text(userName);
-        var playerRefKey = database.ref("/players").push();
+        let playerRefKey = database.ref("/players").push();
         playerRefKey.set({userName: userName, connected: true});
         playerKey = playerRefKey.key;
 

@@ -24,10 +24,12 @@
             <div class="modal-content">
                 <div class="form-group modal-body">
                     <label class="lb-lg" for="username-input">Username</label>
-                    <input type="text" class="form-control" id="username-input" aria-describedby="username" placeholder="Enter username">
+                    <input type="text" class="form-control" id="username-input" aria-describedby="username"
+                           placeholder="Enter username">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" id="username-submit" class="btn btn-primary" data-dismiss="modal">Submit</button>
+                    <button type="button" id="username-submit" class="btn btn-primary" data-dismiss="modal">Submit
+                    </button>
                 </div>
             </div>
         </div>
@@ -39,9 +41,14 @@
                 <div class="row p-3">
                     <div class="p-3 align-self-center col-md-5">
                         <div class="card player-section">
-                            <div class="card-block p-2 my-2">
+                            <div class="card-block px-2 mt-2">
                                 <h2 class="text-center"><span id="player-title">Player</span></h2>
                                 <hr>
+                            </div>
+                            <div class="text-center">
+                                <h4><span class="badge badge-success mx-auto px-4 mt-0">Wins: <span
+                                        id="player-wins"></span></span>
+                                </h4>
                             </div>
                             <div id="player-selection" class="move-display">
                             </div>
@@ -57,9 +64,14 @@
                     </div>
                     <div class="p-3 align-self-center col-md-5">
                         <div class="card player-section">
-                            <div class="card-block p-2 my-2">
+                            <div class="card-block px-2 mt-2">
                                 <h2 class="text-center"><span id="opponent-title">Opponent</span></h2>
                                 <hr>
+                            </div>
+                            <div class="text-center">
+                                <h4><span class="badge badge-success mx-auto px-4 mt-0">Wins: <span
+                                        id="opponent-wins"></span></span>
+                                </h4>
                             </div>
                             <div id="opponent-selection" class="move-display">
                             </div>
