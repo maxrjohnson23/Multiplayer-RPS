@@ -12,8 +12,9 @@ firebase.initializeApp(config);
 var database = firebase.database();
 
 var userName = null;
-var userKey = null;
-var opponentKey = null;
+var playerKey = null;
+var opponentName = null;
+var userWins = 0;
 
 // User presence
 database.ref("/.info/connected").on("value", function (snapshot) {
@@ -27,8 +28,10 @@ database.ref("/.info/connected").on("value", function (snapshot) {
 database.ref("/players").on("value", function (snapshot) {
     let players = snapshot.val();
     if (snapshot.numChildren() === 2) {
-        opponentKey = Object.keys(players).find(function(obj) {return obj.userName !== userName});
-        let opponentName = players[opponentKey].userName;
+        var opponentKey = Object.keys(players).find(function (key) {
+            return players[key].userName !== userName
+        });
+        opponentName = players[opponentKey].userName;
         $("#opponent-title").text(opponentName);
         startGame(players);
 
@@ -39,30 +42,31 @@ database.ref("/players").on("value", function (snapshot) {
 
 // Updates to game moves
 database.ref("/game/moves").on("value", function (snapshot) {
+    console.log("Move updated");
     var moves = snapshot.val();
-    if(snapshot.numChildren() === 2) {
+    if (snapshot.numChildren() === 2) {
+        console.log("2 Moves");
 
-        var playerMove = null;
-        var opponentMove = null;
-        Object.keys(moves)
-            .forEach(function eachKey(key) {
-                if (moves[key].userName === userName) {
-                    playerMove = moves[key].move;
-                } else {
-                    opponentMove = moves[key].move;
-
-                }
-            });
+        let playerMove = moves[userName].move;
+        let opponentMove = moves[opponentName].move;
 
         console.log("Player: " + playerMove);
         console.log("Opponent: " + opponentMove);
-        var outcome = calculateWinner(playerMove, opponentMove);
-        console.log("Outcome: " + outcome);
+        let outcome = calculateWinner(playerMove, opponentMove);
+        $("#move-selections").find("button").prop("disabled", false);
+        if (outcome > 0) {
+            console.log("Win!");
+            userWins++;
+            database.ref("/game/" + userName + "/score").set(userWins);
+        }
+        database.ref("/game/moves/" + userName).remove();
+        console.log("Unlock game");
+
+
     }
 
 
-})
-;
+});
 
 // Updates to game
 database.ref("/game").on("value", function (snapshot) {
@@ -76,20 +80,20 @@ database.ref("/game").on("value", function (snapshot) {
 function startGame(players) {
     console.log("Starting game");
     let game = {
-        players: players,
-        moves: null
+        moves: null,
+        score: 0
     };
-    database.ref("/game").set(game);
+    database.ref("/game/" + userName).set(game);
 }
 
 $("#move-selections").find("button").on("click", function () {
     let selection = $(this).attr("data-move");
-    let move = {
-        userName: userName,
-        move: selection
-    };
-    database.ref("/game/moves").push(move);
+    console.log("Clicked: " + selection);
+    // let move = {
+    //     move: selection
+    // };
     $("#move-selections").find("button").prop("disabled", true);
+    database.ref("/game/moves/" + userName).set({move: selection});
 
 });
 
@@ -102,13 +106,12 @@ function calculateWinner(move1, move2) {
         return -1;
     }
     else if ((moveNum1 - moveNum2 + 3) % 3 === 1) {
-        return 0;
-    }
-    else {
         return 1;
     }
+    else {
+        return 0;
+    }
 }
-
 
 
 window.onload = function () {
@@ -119,7 +122,7 @@ window.onload = function () {
         $("#player-title").text(userName);
         var playerRefKey = database.ref("/players").push();
         playerRefKey.set({userName: userName, connected: true});
-        userKey = playerRefKey.key;
+        playerKey = playerRefKey.key;
 
         // Remove player when connection ends
         playerRefKey.onDisconnect().remove();
