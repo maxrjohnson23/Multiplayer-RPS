@@ -150,7 +150,14 @@ function calculateWinner(move1, move2) {
 
 $("#send-button").on("click", function() {
     var message = $("#message").val();
+    $("#message").val("");
     addMessageToDB(userName, message);
+});
+
+$('#message').keypress(function(e){
+    if(e.which == 13){//Enter key pressed
+        $('#send-button').click();//Trigger search button click event
+    }
 });
 
 
