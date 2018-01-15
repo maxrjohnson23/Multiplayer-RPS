@@ -69,7 +69,9 @@ database.ref("/game/moves").on("value", function (snapshot) {
         }
         database.ref("/game/moves/" + userName).remove();
         setTimeout(function() {
+            // Clear images
             $(".move-display").empty();
+            // Unlock buttons
             $("#move-selections").find("button").prop("disabled", false);
         }, 2000);
         console.log("Unlock game");
