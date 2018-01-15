@@ -69,11 +69,13 @@ database.ref("/game/moves").on("value", function (snapshot) {
             database.ref("/game/" + userName + "/score").set(userWins);
         }
         database.ref("/game/moves/" + userName).remove();
-        setTimeout(function() {
+        setTimeout(function () {
             // Clear images
             $(".move-display").empty();
             // Unlock buttons
             $("#move-selections").find("button").prop("disabled", false);
+            $("#opponent-text").empty();
+
         }, 2000);
         console.log("Unlock game");
 
@@ -90,6 +92,22 @@ database.ref("/game").on("value", function (snapshot) {
         $("#move-selections").find("button").prop("disabled", false);
     }
 });
+
+// Get scores
+database.ref("/game/").on("child_changed", function (snapshot) {
+    console.log("Child changed");
+    console.log(snapshot.val());
+    console.log(snapshot.key);
+    if (snapshot.val().score) {
+        var winner = snapshot.key;
+        if (winner === userName) {
+            $("#player-wins").text(snapshot.val().score);
+        } else {
+            $("#opponent-wins").text(snapshot.val().score);
+        }
+    }
+
+})
 
 //
 function startGame() {
