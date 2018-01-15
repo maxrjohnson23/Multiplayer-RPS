@@ -12,6 +12,8 @@ firebase.initializeApp(config);
 var database = firebase.database();
 
 var userName = null;
+var userKey = null;
+var opponentKey = null;
 
 // User presence
 database.ref("/.info/connected").on("value", function (snapshot) {
@@ -23,15 +25,10 @@ database.ref("/.info/connected").on("value", function (snapshot) {
 
 // Updates to players
 database.ref("/players").on("value", function (snapshot) {
-    var players = snapshot.val();
+    let players = snapshot.val();
     if (snapshot.numChildren() === 2) {
-        var opponentName = "";
-        Object.keys(players)
-            .forEach(function eachKey(key) {
-                if (players[key].userName !== userName) {
-                    opponentName =  players[key].userName;
-                }
-            });
+        opponentKey = Object.keys(players).find(function(obj) {return obj.userName !== userName});
+        let opponentName = players[opponentKey].userName;
         $("#opponent-title").text(opponentName);
         startGame(players);
 
@@ -113,6 +110,7 @@ function calculateWinner(move1, move2) {
 }
 
 
+
 window.onload = function () {
     $("#username-select").modal({backdrop: 'static', keyboard: false});
     $("#username-submit").on("click", function () {
@@ -121,6 +119,7 @@ window.onload = function () {
         $("#player-title").text(userName);
         var playerRefKey = database.ref("/players").push();
         playerRefKey.set({userName: userName, connected: true});
+        userKey = playerRefKey.key;
 
         // Remove player when connection ends
         playerRefKey.onDisconnect().remove();
