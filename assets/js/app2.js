@@ -8,37 +8,39 @@ var config = {
     messagingSenderId: "892854720255"
 };
 firebase.initializeApp(config);
-// Store global database variable for firebase
+// Store global database variable
 var database = firebase.database();
 
 var userName = null;
 
 // User presence
 database.ref("/.info/connected").on("value", function (snapshot) {
-    if (snapshot.val()) {
-        // Add new player to the database
-        // var playerRefKey = database.ref("/players").push();
-        // playerRefKey.set({id: playerRefKey.key, connected:true});
-        // currentPlayer = playerRefKey.key;
-        //
-        // // Remove player when connection ends
-        // playerRefKey.onDisconnect().remove();
-    } else {
+    if (!snapshot.val()) {
         database.ref("/game").remove();
+
     }
 });
 
 // Updates to players
 database.ref("/players").on("value", function (snapshot) {
+    var players = snapshot.val();
     if (snapshot.numChildren() === 2) {
-        startGame(snapshot.val());
+        var opponentName = "";
+        Object.keys(players)
+            .forEach(function eachKey(key) {
+                if (players[key].userName !== userName) {
+                    opponentName =  players[key].userName;
+                }
+            });
+        $("#opponent-title").text(opponentName);
+        startGame(players);
 
     } else if (snapshot.numChildren() === 1) {
         console.log("Waiting for opponent");
     }
 });
 
-// Updates to game
+// Updates to game moves
 database.ref("/game/moves").on("value", function (snapshot) {
     var moves = snapshot.val();
     if(snapshot.numChildren() === 2) {
@@ -116,6 +118,7 @@ window.onload = function () {
     $("#username-submit").on("click", function () {
         userName = $("#username-input").val();
         console.log("Setting username: " + userName);
+        $("#player-title").text(userName);
         var playerRefKey = database.ref("/players").push();
         playerRefKey.set({userName: userName, connected: true});
 
