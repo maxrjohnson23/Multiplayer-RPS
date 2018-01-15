@@ -11,17 +11,18 @@ firebase.initializeApp(config);
 // Store global database variable for firebase
 var database = firebase.database();
 
-var currentPlayer = null;
+var userName = null;
 
 // User presence
 database.ref("/.info/connected").on("value", function(snapshot) {
     if(snapshot.val()) {
         // Add new player to the database
-        var playerRefKey = database.ref("/players").push();
-        playerRefKey.set({id: playerRefKey.key, connected:true});
-        currentPlayer = playerRefKey.key;
-        // Remove player when connection ends
-        playerRefKey.onDisconnect().remove();
+        // var playerRefKey = database.ref("/players").push();
+        // playerRefKey.set({id: playerRefKey.key, connected:true});
+        // currentPlayer = playerRefKey.key;
+        //
+        // // Remove player when connection ends
+        // playerRefKey.onDisconnect().remove();
     } else {
         database.ref("/game").remove();
     }
@@ -32,7 +33,7 @@ database.ref("/players").on("value", function(snapshot) {
     if(snapshot.numChildren() === 2) {
         startGame(snapshot.val());
 
-    } else {
+    } else if(snapshot.numChildren() === 1) {
         console.log("Waiting for opponent");
     }
 });
@@ -52,29 +53,35 @@ function startGame(players) {
     database.ref("/game").set(game);
 }
 
-$("#rock").on("click", function() {
+$("#move-selections").find("button").on("click", function() {
+    var selection = $(this).attr("data-move");
     var move = {
-        player: currentPlayer,
-        move: "rock"
+        player: userName,
+        move: selection
     }
     database.ref("/game/moves").push(move);
+    $("#move-selections").find("button").prop("disabled",true);
+
 });
 
-$("#paper").on("click", function() {
-    var move = {
-        player: currentPlayer,
-        move: "paper"
-    }
-    database.ref("/game/moves").push(move);
-});
 
-$("#scissors").on("click", function() {
-    var move = {
-        player: currentPlayer,
-        move: "scissors"
-    }
-    database.ref("/game/moves").push(move);
-});
+
+
+window.onload = function() {
+    $("#username-select").modal({backdrop: 'static', keyboard: false});
+    $("#username-submit").on("click", function() {
+        userName = $("#username-input").val();
+        console.log("Setting username: " + userName);
+        var playerRefKey = database.ref("/players").push();
+        playerRefKey.set({userName: userName, connected:true});
+
+        // Remove player when connection ends
+        playerRefKey.onDisconnect().remove();
+
+
+    });
+
+};
 
 
 

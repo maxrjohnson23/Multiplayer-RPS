@@ -19,6 +19,19 @@
             <img class="img-fluid d-block" src="assets/images/logo.png">
         </div>
     </header>
+    <div class="modal fade" id="username-select">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="form-group modal-body">
+                    <label class="lb-lg" for="username-input">Username</label>
+                    <input type="text" class="form-control" id="username-input" aria-describedby="username" placeholder="Enter username">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="username-submit" class="btn btn-primary" data-dismiss="modal">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="d-flex main flex-column">
 
         <div class="game py-4">
@@ -32,10 +45,10 @@
                             </div>
                             <div id="player-selection">
                             </div>
-                            <div class=" mx-auto">
-                                <a href="#" id="rock" class="btn btn-primary m-1 px-4">Rock</a>
-                                <a href="#" id="paper" class="btn btn-primary m-1 px-4">Paper</a>
-                                <a href="#" id="scissors" class="btn btn-primary m-1 px-4">Scissors</a>
+                            <div class="mx-auto" id="move-selections">
+                                <button class="btn btn-primary m-1 px-4" data-move="rock">Rock</button>
+                                <button class="btn btn-primary m-1 px-4" data-move="paper">Paper</button>
+                                <button class="btn btn-primary m-1 px-4" data-move="scissors">Scissors</button>
                             </div>
                         </div>
                     </div>
