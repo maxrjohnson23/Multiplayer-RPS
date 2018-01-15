@@ -21,8 +21,7 @@ database.ref("/.info/connected").on("value", function(snapshot) {
         playerRefKey.set({id: playerRefKey.key, connected:true});
         currentPlayer = playerRefKey.key;
         // Remove player when connection ends
-        playerRefKey.onDisconnect()
-            .remove();
+        playerRefKey.onDisconnect().remove();
     } else {
         database.ref("/game").remove();
     }
