@@ -1,5 +1,5 @@
 // Initialize Firebase
-var config = {
+const config = {
     apiKey: "AIzaSyAFCI1LBk7YQ6kWN5mXrv4FOCm4b_sBaxk",
     authDomain: "multiplayer-rps-7ad91.firebaseapp.com",
     databaseURL: "https://multiplayer-rps-7ad91.firebaseio.com",
@@ -8,147 +8,291 @@ var config = {
     messagingSenderId: "892854720255"
 };
 firebase.initializeApp(config);
-// Store global database variable for firebase
-var database = firebase.database();
+// Store global database variable
+const database = firebase.database();
 
+// Game logic and functions
+const GAME = {
+    userName: null,
+    opponentName: null,
+    userWins: 0,
+    startGame: function () {
+        // Update opponent card
+        UI.updateOpponentTitle(GAME.opponentName);
+        UI.enableSelectionButtons();
+    },
+    resetMoves: function () {
+        UI.resetMoves();
+    },
+    calculateWinner: function (playerMove, opponentMove) {
+        let choices = ["rock", "paper", "scissors"];
+        let playerMoveIdx = choices.indexOf(playerMove);
+        let opponentMoveIdx = choices.indexOf(opponentMove);
 
+        // Tie
+        if (playerMoveIdx === opponentMoveIdx) {
+            return -1;
+        }
+        // Win
+        else if ((playerMoveIdx - opponentMoveIdx + 3) % 3 === 1) {
+            return 1;
+        }
+        // Lose
+        else {
+            return 0;
+        }
+    }
+};
 
+// Object for handling database interactions
+const DATA_OBJ = {
+    playersRef: database.ref("/players"),
+    init: function () {
+        // Register event handlers
+        this.registerPresence();
+        this.registerPlayerChanges();
+        this.registerMovesUpdates();
+        this.registerScoreUpdates();
+        this.registerGameUpdates();
+        this.registerChatUpdates();
+    },
+    registerPresence: function () {
+        database.ref("/.info/connected").on("value", function (snapshot) {
+            if (!snapshot.val()) {
+                database.ref("/game").remove();
+                database.ref("/chat").remove();
+            }
+        });
+    },
+    registerPlayerChanges: function () {
+        this.playersRef.on("value", function (snapshot) {
+            let players = snapshot.val();
+            // Wait for two players to join the game
+            if (snapshot.numChildren() === 2) {
+                // Store opponent name in game object
+                let opponentKey = Object.keys(players).find(function (key) {
+                    return players[key].userName !== GAME.userName
+                });
+                GAME.opponentName = players[opponentKey].userName;
 
-// Game logic object and functions
-var game = {
-    player1:null,
-    player2:null,
-    playerList: [],
-    updateGame: function(game) {
+                // Create game and chat in DB
+                DATA_OBJ.createGame();
+                DATA_OBJ.createChat();
 
+                // Start game logic
+                GAME.startGame();
+
+            } else if (snapshot.numChildren() === 1) {
+                // Wait for opponent to join the game
+                UI.disableSelectionButtons();
+                UI.updateOpponentTitle("Waiting...");
+            }
+        });
+    },
+    registerMovesUpdates: function () {
+        database.ref("/game/moves").on("value", function (snapshot) {
+            let moves = snapshot.val();
+            // Wait for both users to submit their move
+            if (snapshot.numChildren() === 2) {
+
+                let playerMove = moves[GAME.userName].move;
+                let opponentMove = moves[GAME.opponentName].move;
+
+                // Display image and text
+                UI.updateOpponentMove(opponentMove);
+
+                let outcome = GAME.calculateWinner(playerMove, opponentMove);
+                // Win = 1
+                if (outcome > 0) {
+                    GAME.userWins++;
+                    // Update score in database
+                    database.ref("/game/" + GAME.userName + "/score").set(GAME.userWins);
+                }
+                // Reset moves for next round
+                database.ref("/game/moves/" + GAME.userName).remove();
+                // Pause and reset for the next move
+                setTimeout(function () {
+                    GAME.resetMoves();
+                }, 2000);
+            }
+        });
+    },
+    registerScoreUpdates: function () {
+        database.ref("/game/").on("child_changed", function (snapshot) {
+            // After round, check for the updated score
+            if (snapshot.val().score) {
+                let winner = snapshot.key;
+                let score = snapshot.val().score;
+                // Only the winner's score will update
+                UI.updateScore(winner, score);
+            }
+
+        })
+    },
+    registerGameUpdates: function () {
+        database.ref("/game").on("value", function (snapshot) {
+            if (!snapshot.val()) {
+                // reset game if users disconnect
+                GAME.resetMoves();
+            }
+        });
+    },
+    registerChatUpdates: function () {
+        database.ref("/chat").on("child_added", function (snapshot) {
+            let message = snapshot.val();
+            UI.appendMessage(message.user, message.message)
+        });
+    },
+    createUser: function() {
+        let playerRefKey = this.playersRef.push();
+        // Set user details
+        playerRefKey.set({userName: GAME.userName, connected: true});
+
+        // Remove player when connection ends
+        playerRefKey.onDisconnect().remove();
     },
     createGame: function() {
-        var newGame = {
-            state: "started",
-            player1: game.player1,
-            player2: game.player2
+        // Create and save new game
+        let game = {
+            moves: null,
+            score: 0
         };
-        dataHandler.createGame(newGame);
+        // create game in DB
+        let gameRefKey = database.ref("/game/" + GAME.userName);
+        gameRefKey.set(game);
+        gameRefKey.onDisconnect().remove();
     },
-    resetGame: function() {
-        dataHandler.gameRef.remove();
+    createChat: function() {
+        // Initialize default chat
+        let chat = {
+            user:"System",
+            message:"Game started. Have fun!"
+        };
+        // create chat in DB
+        let chatRefKey = database.ref("/chat/init");
+        chatRefKey.set(chat);
+        database.ref("/chat").onDisconnect().remove();
+    },
+    addMessageToDB: function (user, message) {
+        database.ref("/chat").push({user: user, message: message});
+
+    },
+    saveMove: function(move) {
+        database.ref("/game/moves/" + GAME.userName).set({move: move});
     }
 };
 
-// Chat functions
-var chat =  {
-    appendMessage: function(id, message) {
-        var p = $("<p>");
-        p.text(`${id}: ${message}`);
-        if(id !== game.player1.id) {
-            p.css("text-align", "right");
+const UI = {
+    init: function () {
+        this.registerSelectionButtons();
+        this.registerChatSendButton();
+    },
+    resetMoves: function () {
+        // Clear images and opponent text
+        $(".move-display").empty();
+        $("#opponent-text").empty();
+        // Enable buttons
+        this.enableSelectionButtons();
+    },
+    registerSelectionButtons: function () {
+        $("#move-selections").find("button").on("click", function () {
+            // Get value of the move: rock, paper, or scissors
+            let selection = $(this).attr("data-move");
+            // Choose image based on selection
+            let img = $('<img />', {
+                src: `assets/images/${selection}.png`,
+                alt: selection
+            });
+            $("#player-selection").html(img);
+            // Disable buttons until the round is over
+            UI.disableSelectionButtons();
+            // Save move to database
+            DATA_OBJ.saveMove(selection);
+        });
+    },
+    registerChatSendButton: function () {
+        $("#send-button").on("click", function () {
+            let $messageInput = $("#message");
+            let messageText = $messageInput.val();
+            // Clear input on send
+            $messageInput.val("");
+            DATA_OBJ.addMessageToDB(GAME.userName, messageText);
+        });
+
+        // Allow enter key to call submit the message
+        $('#message').keypress(function (e) {
+            if (e.which === 13) {
+                $('#send-button').click();
+            }
+        });
+    },
+    appendMessage: function (user, message) {
+        let $p = $("<p>");
+        let $nameSpan = $("<span>");
+        $p.append($nameSpan);
+        // Username span
+        $nameSpan.text(`${user}: `);
+        $nameSpan.addClass("badge badge-primary");
+
+        // Add message
+        $p.append(`  ${message}`);
+        $p.addClass("chat-message");
+
+        // Messages from other users appear to the right in the chat
+        if (user !== GAME.userName) {
+            $p.css("text-align", "right");
         }
-        $("#chat-window").append(p);
+        let $chatWindow = $("#chat-window");
+        // Append message to the chat window
+        $chatWindow.append($p);
+        // Force chat window to scroll to the bottom on overflow
+        $chatWindow.prop("scrollTop", $chatWindow.prop("scrollHeight"));
     },
-    registerChatSendButton: function() {
-        $("#send-button").on("click", function() {
-            var message = $("#message").val();
-            dataHandler.addMessage(game.player1.id, message);
-        })
-    },
-    resetChat: function() {
-        dataHandler.chatRef.remove();
-    }
-
-}
-
-// Object for handling firebase interactions
-var dataHandler = {
-    // Database references
-    playersRef: database.ref("/players"),
-    chatRef: database.ref("/chat"),
-    gameRef: database.ref("/GAME"),
-    gameCreated: false,
-    currentPlayerKey: null,
-    registerUserPresence: function() {
-        // Register connect/disconnect events
-        database.ref("/.info/connected").on("value", function(snapshot) {
-            if(snapshot.val()) {
-                // Add new player to the database
-                var playerRefKey = dataHandler.playersRef.push();
-                dataHandler.currentPlayerKey = playerRefKey.key;
-                playerRefKey.set({id: dataHandler.currentPlayerKey, connected:true});
-                // Remove player when connection ends
-                playerRefKey.onDisconnect()
-                    .remove();
-            } else {
-                // clear chat on exit
-                chat.resetChat();
-                game.resetGame();
-
-            }
-        })
-    },
-    registerPlayerAdded: function() {
-        dataHandler.playersRef.on("child_added", function(snapshot) {
-            var player = snapshot.val();
-            if(!gameCreated) {
-                if(player.id == dataHandler.currentPlayerKey) {
-                    dataHandler.gameCreated = true;
-                }
-                console.log("creating GAME");
-                dataHandler.createGame(player);
-            } else {
-                console.log("adding to GAME");
-                dataHandler.addPlayerToGame();
-            }
-            dataHandler.addPlayerToGame(player);
+    showUsernameModal: function () {
+        // Create popup, user must enter a username
+        $("#username-select").modal({backdrop: 'static', keyboard: false});
+        $("#username-submit").on("click", function () {
+            // Set username in player card and game object
+            GAME.userName = $("#username-input").val();
+            $("#player-title").text(GAME.userName);
+            // Create user in firebase
+            DATA_OBJ.createUser();
         });
     },
-    registerGameUpdated: function() {
-        dataHandler.gameRef.on("value", function(snapshot) {
-
+    updateOpponentTitle: function(name) {
+        $("#opponent-title").text(name);
+    },
+    updateOpponentMove: function(opponentMove) {
+        // Create image
+        let img = $('<img />', {
+            src: `assets/images/${opponentMove}.png`,
+            alt: opponentMove
         });
+        // Update opponent image
+        $("#opponent-selection").html(img);
+        // Update opponent text
+        $("#opponent-text").text(opponentMove);
     },
-    registerChat: function() {
-        dataHandler.chatRef.on("child_added", function(snapshot) {
-            var message = snapshot.val();
-            chat.appendMessage(message.user, message.message)
-        });
+    updateScore: function(winner, score) {
+        if (winner === GAME.userName) {
+            $("#player-wins").text(score);
+        } else {
+            $("#opponent-wins").text(score);
+        }
     },
-    addMessage: function(user, message) {
-        dataHandler.chatRef.push({user: user, message: message});
+    enableSelectionButtons() {
+        $("#move-selections").find("button").prop("disabled", false);
     },
-    createGame: function(player) {
-        var game = {
-            state: "started",
-            players: player
-        };
-        dataHandler.gameRef.set(game);
-    },
-    addPlayerToGame: function(player) {
-
-        dataHandler.gameRef.child("players").push(player);
-    }
-};
-
-// Screen object for handling UI components
-var screen = {
-    showWaitingMessage: function() {
-        $("#opponent-selection").text("Waiting for opponent");
-    },
-    hideWaitingMessage: function() {
-        $("#opponent-selection").text("Opponent joined");
+    disableSelectionButtons() {
+        $("#move-selections").find("button").prop("disabled", true);
     }
 };
 
 
-// Application startup
-window.onload = function() {
-    // Register firebase event handlers
-    dataHandler.registerUserPresence();
-    dataHandler.registerPlayerAdded();
-    dataHandler.registerChat();
-    dataHandler.registerGameUpdated();
-
-    // Register UI events
-    chat.registerChatSendButton();
-
+window.onload = function () {
+    // Show username selection modal
+    UI.showUsernameModal();
+    // Initialize database and UI event handlers
+    DATA_OBJ.init();
+    UI.init();
 };
-
-
