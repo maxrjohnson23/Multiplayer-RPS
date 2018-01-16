@@ -1,5 +1,5 @@
-# Multi-player Rock, Paper, Scissors
-A multi-player rock, paper, scissors game using the Firebase real-time database
+# Multiplayer Rock, Paper, Scissors
+A multiplayer rock, paper, scissors game using the Firebase real-time database
 
 ## Topics Covered
 *  HTML/CSS
