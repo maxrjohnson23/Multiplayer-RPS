@@ -230,9 +230,9 @@ const UI = {
         let $p = $("<p>");
         let $nameSpan = $("<span>");
         $p.append($nameSpan);
-        // Username span
+        // Username span with bootstrap badge
         $nameSpan.text(`${user}: `);
-        $nameSpan.addClass("badge badge-primary");
+        $nameSpan.addClass("badge");
 
         // Add message
         $p.append(`  ${message}`);
@@ -241,6 +241,9 @@ const UI = {
         // Messages from other users appear to the right in the chat
         if (user !== GAME.userName) {
             $p.css("text-align", "right");
+            $nameSpan.addClass("badge-secondary");
+        } else {
+            $nameSpan.addClass("badge-primary");
         }
         let $chatWindow = $("#chat-window");
         // Append message to the chat window
