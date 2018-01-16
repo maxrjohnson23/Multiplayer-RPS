@@ -171,7 +171,7 @@ const DATA_OBJ = {
         // create chat in DB
         let chatRefKey = database.ref("/chat/init");
         chatRefKey.set(chat);
-        chatRefKey.onDisconnect().remove();
+        database.ref("/chat").onDisconnect().remove();
     },
     addMessageToDB: function (user, message) {
         database.ref("/chat").push({user: user, message: message});
