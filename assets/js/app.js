@@ -62,7 +62,7 @@ var dataHandler = {
     // Database references
     playersRef: database.ref("/players"),
     chatRef: database.ref("/chat"),
-    gameRef: database.ref("/game"),
+    gameRef: database.ref("/GAME"),
     gameCreated: false,
     currentPlayerKey: null,
     registerUserPresence: function() {
@@ -91,10 +91,10 @@ var dataHandler = {
                 if(player.id == dataHandler.currentPlayerKey) {
                     dataHandler.gameCreated = true;
                 }
-                console.log("creating game");
+                console.log("creating GAME");
                 dataHandler.createGame(player);
             } else {
-                console.log("adding to game");
+                console.log("adding to GAME");
                 dataHandler.addPlayerToGame();
             }
             dataHandler.addPlayerToGame(player);
